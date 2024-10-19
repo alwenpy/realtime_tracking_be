@@ -9,117 +9,114 @@
             width: 100%;
         }
     </style>
-    <script type="text/javascript">
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-        const csrftoken = getCookie('csrftoken');
-    </script>
-    <script>
-    // Initialize the map
-function initMap() {
-    var map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 15,
-        center: {lat: 51.509865, lng: -0.118092}  // Initial center, fallback if no location
-    });
-
-    var marker = new google.maps.Marker({
-        position: {lat: 51.509865, lng: -0.118092},  // Initial position
-        map: map,
-        title: 'Current Location'
-    });
-
-    // Function to update the marker's position on the map
-    function updateMarkerPosition(newLat, newLng) {
-        var newPosition = new google.maps.LatLng(newLat, newLng);
-        marker.setPosition(newPosition);
-        map.setCenter(newPosition);
-    }
-
-    // Function to get the user's current location and send it to the server
-    function sendLocationUpdate() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                var latitude = position.coords.latitude;
-                var longitude = position.coords.longitude;
-
-                // Send the user's location to the server
-                fetch('/api/update_location/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrftoken,  // Ensure CSRF token is included if needed
-                    },
-                    body: JSON.stringify({
-                        latitude: latitude,
-                        longitude: longitude
-                    })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Failed to send location to the server');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Location updated on the server:', data);
-                })
-                .catch(error => {
-                    console.error('Error updating location:', error);
-                });
-            });
-        } else {
-            console.error("Geolocation is not supported by this browser.");
-        }
-    }
-
-    setInterval(sendLocationUpdate, 50000);
-
-    setInterval(function() {
-        fetch('/api/get_latest_location/')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.latitude && data.longitude) {
-                var lat = parseFloat(data.latitude);
-                var lng = parseFloat(data.longitude);
-                console.log('Fetched latest location:', lat, lng);
-                updateMarkerPosition(lat, lng);
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching location:', error);
-        });
-    }, 5000);  // Update every 5 seconds
-}
-
-// Start sending location updates on window load
-window.onload = initMap;
-</script>
-    
-    
-    <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDbWstCl3Uih510K2BO0wvJfmeDoGyrPRE&callback=initMap">
-    </script>
+  
 </head>
 <body>
     <h1>Real-Time Location Tracking</h1>
     {% csrf_token %}
     <div id="map"></div>
+<script type="text/javascript">
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+</script>
+<script>
+function initMap() {
+var map = new google.maps.Map(document.getElementById('map'), {
+    zoom: 20,
+    center: {lat: 51.509865, lng: -0.118092}  // Initial center, fallback if no location
+});
+
+var marker = new google.maps.Marker({
+    position: {lat: 51.509865, lng: -0.118092},  // Initial position
+    map: map,
+    title: 'Current Location'
+});
+
+function updateMarkerPosition(newLat, newLng) {
+    var newPosition = new google.maps.LatLng(newLat, newLng);
+    marker.setPosition(newPosition);
+    map.panTo(newPosition); 
+    }
+
+function sendLocationUpdate() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            var latitude = position.coords.latitude;
+            var longitude = position.coords.longitude;
+
+            fetch('/api/update_location/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,  
+                },
+                body: JSON.stringify({
+                    latitude: latitude,
+                    longitude: longitude
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to send location to the server');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Location updated on the server:', data);
+            })
+            .catch(error => {
+                console.error('Error updating location:', error);
+            });
+        });
+    } else {
+        console.error("Geolocation is not supported by this browser.");
+    }
+}
+
+setInterval(sendLocationUpdate, 5000);
+
+setInterval(function() {
+    fetch('/api/get_latest_location/')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.latitude && data.longitude) {
+            var lat = parseFloat(data.latitude);
+            var lng = parseFloat(data.longitude);
+            console.log('Fetched latest location:', lat, lng);
+            updateMarkerPosition(lat, lng);
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching location:', error);
+    });
+}, 5000);  // Update every 5 seconds
+}
+
+window.onload = initMap;
+</script>
+
+
+<script async defer
+src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDbWstCl3Uih510K2BO0wvJfmeDoGyrPRE&callback=initMap">
+</script>
 </body>
+
 </html>

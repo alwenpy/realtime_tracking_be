@@ -36,4 +36,3 @@ def send_location_update(location_data):
 
 if __name__ == "__main__":
     location = {"latitude": 51.509865, "longitude": -0.118092}
-    send_location_update(location)
