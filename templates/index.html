@@ -84,10 +84,8 @@ function initMap() {
         }
     }
 
-    // Periodically send location update every 5 seconds
-    setInterval(sendLocationUpdate, 5000);
+    setInterval(sendLocationUpdate, 50000);
 
-    // Fetch location updates from the server and update the map marker
     setInterval(function() {
         fetch('/api/get_latest_location/')
         .then(response => {
